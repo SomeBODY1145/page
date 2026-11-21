@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0a0a0f">
+<title>你被骗了？</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { height:100%; }
+  body {
+    background:#0a0a0f;
+    color:#eef;
+    font-family:-apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+    overflow:hidden;
+    user-select:none;
+    -webkit-user-select:none;
+  }
+  .screen {
+    position:fixed; inset:0;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    padding:28px;
+    opacity:0; visibility:hidden;
+    transition:opacity .28s ease;
+  }
+  .screen.on { opacity:1; visibility:visible; }
+
+  /* ---------- 第一屏：假加载 ---------- */
+  #load { background:radial-gradient(1200px 800px at 50% 20%, #12122a 0%, #0a0a0f 60%); }
+  .logo {
+    width:76px; height:76px; border-radius:22px;
+    background:linear-gradient(135deg,#2f6bff,#7a3cff);
+    display:flex; align-items:center; justify-content:center;
+    font-size:26px; font-weight:700; letter-spacing:1px;
+    box-shadow:0 12px 40px rgba(70,110,255,.35);
+    margin-bottom:22px;
+    animation:pulse 1.6s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.05)} }
+  .load-title { font-size:19px; font-weight:600; letter-spacing:2px; color:#dfe6ff; }
+  .load-sub { margin-top:10px; font-size:13px; color:#7d87b5; letter-spacing:1px; }
+  .bar {
+    width:min(320px,72vw); height:8px; border-radius:99px;
+    background:#1a1d33; overflow:hidden; margin-top:26px;
+    box-shadow:inset 0 0 0 1px #23284a;
+  }
+  .bar > i { display:block; height:100%; width:0; border-radius:99px;
+    background:linear-gradient(90deg,#2f6bff,#9a5bff);
+    animation:fill 1.9s cubic-bezier(.2,.7,.2,1) forwards; }
+  @keyframes fill { to { width:100%; } }
+  .load-tip { margin-top:14px; font-size:12px; color:#5d6690; letter-spacing:.5px; }
+
+  /* ---------- 第二屏：你被骗了 ---------- */
+  #scare { background:#050508; overflow:hidden; }
+  #scare.on { animation:shake .5s cubic-bezier(.36,.07,.19,.97) 2; }
+  @keyframes shake {
+    10%,90%{transform:translate(-2px,1px)} 20%,80%{transform:translate(4px,-2px)}
+    30%,50%,70%{transform:translate(-6px,2px)} 40%,60%{transform:translate(6px,-2px)}
+  }
+  .flash {
+    position:absolute; inset:0; background:#ff1f3d; opacity:0;
+    animation:flash .5s ease-out 1;
+  }
+  @keyframes flash { 0%{opacity:.55} 100%{opacity:0} }
+  .scanline {
+    position:absolute; left:0; right:0; height:90px; top:-20%;
+    background:linear-gradient(180deg, transparent, rgba(255,40,70,.12), transparent);
+    animation:scan 3.2s linear infinite;
+  }
+  @keyframes scan { to { top:120%; } }
+  .scare-inner { position:relative; text-align:center; z-index:2; padding:0 14px; }
+  .glitch {
+    font-size:clamp(44px, 15vw, 96px);
+    font-weight:900; letter-spacing:.08em;
+    color:#ff2d4b;
+    text-shadow:0 0 12px rgba(255,45,75,.8), 3px 0 #00e5ff, -3px 0 #ff00d4;
+    animation:glitch 1.4s steps(2,end) infinite;
+    line-height:1.1;
+  }
+  @keyframes glitch {
+    0%,100% { transform:translate(0,0) skewX(0); }
+    20% { transform:translate(-3px,1px) skewX(-3deg); }
+    40% { transform:translate(3px,-1px) skewX(2deg); }
+    60% { transform:translate(-2px,-2px) skewX(-1deg); }
+    80% { transform:translate(2px,2px) skewX(3deg); }
+  }
+  .scare-sub { margin-top:16px; font-size:14px; color:#ff7d8f; letter-spacing:3px; }
+  .term {
+    margin:26px auto 0; width:min(340px,84vw); text-align:left;
+    font-family:ui-monospace, Consolas, "Courier New", monospace;
+    font-size:12.5px; line-height:2; color:#54ffa8;
+  }
+  .term div { opacity:0; animation:appear .25s ease forwards; }
+  .term div:nth-child(1){ animation-delay:.35s }
+  .term div:nth-child(2){ animation-delay:.8s }
+  .term div:nth-child(3){ animation-delay:1.25s }
+  .term div:nth-child(4){ animation-delay:1.7s }
+  .term div:nth-child(5){ animation-delay:2.1s; color:#8d97c9; font-size:11.5px; }
+  @keyframes appear { to { opacity:1; } }
+  .tap-hint { position:absolute; bottom:34px; font-size:12px; color:#5d6690; letter-spacing:2px; }
+
+  /* ---------- 第三屏：揭秘 ---------- */
+  #reveal { background:radial-gradient(900px 700px at 50% 0%, #0f1a2e 0%, #080a12 60%); overflow-y:auto; justify-content:flex-start; }
+  .card {
+    width:min(560px,92vw); margin:auto; padding:clamp(22px,4vw,38px);
+    border-radius:20px; background:rgba(18,24,40,.82);
+    border:1px solid rgba(90,130,255,.22);
+    box-shadow:0 30px 80px rgba(0,0,0,.5);
+    backdrop-filter:blur(8px);
+  }
+  .badge {
+    display:inline-flex; align-items:center; gap:8px;
+    font-size:12px; letter-spacing:2px; color:#7ef0b0;
+    border:1px solid rgba(80,220,150,.35); border-radius:99px;
+    padding:6px 14px; margin-bottom:18px;
+  }
+  .badge::before { content:""; width:7px; height:7px; border-radius:50%; background:#54e0a0; box-shadow:0 0 10px #54e0a0; }
+  .card h1 { font-size:clamp(24px,6vw,34px); font-weight:800; letter-spacing:.5px; color:#f2f5ff; line-height:1.3; }
+  .card h1 em { font-style:normal; color:#7ea2ff; }
+  .card p { margin-top:14px; font-size:15px; line-height:1.9; color:#aab4d4; }
+  .demo-tag { color:#ffb45e; }
+  .tips { margin-top:22px; display:flex; flex-direction:column; gap:12px; }
+  .tip {
+    display:flex; gap:12px; padding:14px 16px; border-radius:14px;
+    background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.07);
+    font-size:14px; line-height:1.75; color:#c9d2ee;
+  }
+  .tip b { color:#fff; }
+  .tip .n {
+    flex:0 0 26px; height:26px; border-radius:8px;
+    background:linear-gradient(135deg,#2f6bff,#7a3cff);
+    display:flex; align-items:center; justify-content:center;
+    font-size:13px; font-weight:700; color:#fff; margin-top:1px;
+  }
+  .actions { display:flex; gap:12px; margin-top:28px; flex-wrap:wrap; }
+  .btn {
+    flex:1; min-width:140px; padding:14px 18px; border-radius:12px;
+    border:1px solid rgba(255,255,255,.16); background:rgba(255,255,255,.06);
+    color:#e8ecff; font-size:15px; font-weight:600; letter-spacing:1px; cursor:pointer;
+    transition:transform .15s ease, background .15s ease;
+  }
+  .btn:hover { background:rgba(255,255,255,.1); }
+  .btn:active { transform:scale(.98); }
+  .btn.primary { background:linear-gradient(135deg,#2f6bff,#7a3cff); border-color:transparent; box-shadow:0 12px 30px rgba(80,110,255,.35); }
+  .privacy {
+    margin-top:22px; padding-top:16px; border-top:1px dashed rgba(255,255,255,.1);
+    font-size:12px; line-height:1.9; color:#6c769c;
+  }
+  .foot { margin-top:14px; text-align:center; font-size:11px; color:#4a5378; letter-spacing:1px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation:none !important; transition:none !important; }
+  }
+</style>
+</head>
+<body>
+
+<!-- 第一屏：假装加载 -->
+<section id="load" class="screen on">
+  <div class="logo">星火</div>
+  <div class="load-title">网络安全知识小测验</div>
+  <div class="load-sub">正在加载题库…</div>
+  <div class="bar"><i></i></div>
+  <div class="load-tip">答完 3 题即可参与抽奖</div>
+</section>
+
+<!-- 第二屏：你被骗了 -->
+<section id="scare" class="screen">
+  <div class="flash"></div>
+  <div class="scanline"></div>
+  <div class="scare-inner">
+    <div class="glitch">你被骗了</div>
+    <div class="scare-sub">这 不 是 演 习</div>
+    <div class="term">
+      <div>&gt; 正在读取相册…… 0 张</div>
+      <div>&gt; 正在读取通讯录…… 0 人</div>
+      <div>&gt; 正在读取位置…… 未授权</div>
+      <div>&gt; 正在上传数据…… 0 KB</div>
+      <div>（以上这些，一个都没发生）</div>
+    </div>
+  </div>
+  <div class="tap-hint" id="tapHint">轻触屏幕继续</div>
+</section>
+
+<!-- 第三屏：揭秘 -->
+<section id="reveal" class="screen">
+  <div class="card">
+    <div class="badge">星火网络安全竞赛协会 · 演示页</div>
+    <h1>别慌。<em>这只是个演示。</em></h1>
+    <p>刚才你扫的二维码，指向的就是这个页面。而扫之前，你并不知道它会打开什么。</p>
+    <p class="demo-tag">二维码，就是一张"盲盒链接"。</p>
+
+    <div class="tips">
+      <div class="tip"><span class="n">1</span><div><b>二维码背后可以是任何东西。</b>一个领奖页、一个登录页、一个木马下载页——扫之前，你看到的只是几个黑方块。</div></div>
+      <div class="tip"><span class="n">2</span><div><b>陌生二维码 = 陌生链接，默认不扫。</b>必须扫的，先看清跳转后的域名；要授权、要登录、要下载的，直接关掉。</div></div>
+      <div class="tip"><span class="n">3</span><div><b>装"国家反诈中心"，请从应用商店下载。</b>不要扫别人发的安装包二维码。装完打开来电预警。</div></div>
+    </div>
+
+    <div class="actions">
+      <button class="btn primary" id="again">再看一遍</button>
+      <button class="btn" id="done">我记住了</button>
+    </div>
+
+    <div class="privacy">
+      本页不联网、不读取权限、不上传任何数据。<br>
+      它连你来过，都不知道。
+    </div>
+    <div class="foot">讲座演示用 · 请勿用于其他用途</div>
+  </div>
+</section>
+
+<script>
+(function () {
+  var screens = { load: document.getElementById('load'),
+                  scare: document.getElementById('scare'),
+                  reveal: document.getElementById('reveal') };
+  var timers = [];
+  var buzz = function (pattern) {
+    try { if (navigator.vibrate) navigator.vibrate(pattern); } catch (e) {}
+  };
+  function clearTimers() { timers.forEach(clearTimeout); timers = []; }
+  function show(name) {
+    Object.keys(screens).forEach(function (k) { screens[k].classList.remove('on'); });
+    screens[name].classList.add('on');
+  }
+  function scare() {
+    show('scare');
+    buzz([120, 60, 120, 60, 320]);
+    timers.push(setTimeout(reveal, 4200));
+  }
+  function reveal() { show('reveal'); }
+  function play() {
+    clearTimers();
+    show('load');
+    screens.load.classList.add('on');
+    // 重新触发进度条动画
+    var bar = screens.load.querySelector('.bar > i');
+    bar.style.animation = 'none';
+    void bar.offsetWidth;
+    bar.style.animation = '';
+    timers.push(setTimeout(scare, 2000));
+  }
+  screens.scare.addEventListener('click', function () { clearTimers(); reveal(); });
+  document.getElementById('again').addEventListener('click', play);
+  document.getElementById('done').addEventListener('click', function () {
+    document.body.innerHTML = '<div style="height:100%;display:flex;align-items:center;justify-content:center;color:#6c769c;font-size:14px;letter-spacing:2px;">演示结束 · 请回到讲台</div>';
+  });
+  play();
+})();
+</script>
+</body>
+</html>
